@@ -1,0 +1,190 @@
+ <html ng-app="myApp">
+<head>
+	<link rel="stylesheet" href="bootstrap.min.css"/>
+	<style>
+	@font-face {
+  font-family: 'Glyphicons Halflings';
+  src: url('fonts/glyphicons-halflings-regular.eot');
+  src: url('fonts/glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'), url('fonts/glyphicons-halflings-regular.woff') format('woff'), url('fonts/glyphicons-halflings-regular.ttf') format('truetype'), url('fonts/glyphicons-halflings-regular.svg#glyphicons-halflingsregular') format('svg');
+}
+.close-x
+{
+	float:right;
+}
+	</style>
+<!-- 	/*<style type="text/css">
+	*
+	{
+		padding:0;
+		margin: 0;
+	}
+	#displayBlock
+	{
+		width: 250px;
+		height: 150px;
+		border:1px solid black;
+		margin-left: 20px;
+		float:left;
+	}
+	#innerDisplayBlock1
+	{
+		background-color: #027ff4;
+		height:50px;
+	}
+	</style>*/ -->
+</head>
+
+<body ng-controller="myController">
+<div class="jumbotron text-center">
+    <h1>Define schedule</h1>
+    <label>Name:</label>
+    <input type="text" ng-model="define.name"/>
+    <label>start time:</label>
+    <input type="time" ng-model="define.start"/>
+    <label>End time:</label>
+	<input type="time" ng-model="define.end"/>
+	<fieldset data-role="controlgroup">
+		<legend>Select working days</legend>
+		<label ng-repeat="day in days">
+			<input type="checkbox" name="{{day.name}}" id="{{day.name}}" ng-model="day.checked" ng-change="selectedDays(day.value)">
+			<label for="{{day.name}}">{{day.name}}</label>
+		</label>
+	</fieldset>
+	<input type="button" value="test schedule" ng-click="test()"/>
+	
+	<div ng-if="test">
+		<label>Task:</label>
+		<input type="text" ng-model="test1.task"/>
+		<label>start time:</label>
+		<input type="date" ng-model="test1.date"/>
+		<label>duration:</label>
+		<input type="text" ng-model="test1.duration"/>
+		<input type="button" value="show" ng-click="show()"/>
+	</div>
+
+	<div ng-if="show">
+		<p>list of schedulers</p>
+		<table style="border: 1px solid black">
+			<thead>
+				<td style="border: 1px solid black">
+					Start Date
+				</td>
+				<td style="border: 1px solid black">
+					duration
+				</td>
+				<td style="border: 1px solid black">
+					End time
+				</td>
+			</thead>
+			<tbody>
+				<tr ng-repeat="item in showResult" >
+					<td style="border: 1px solid black">{{item.startDate | date :'yyyy-MM-dd HH:mm:ss'}}</td>
+					<td style="border: 1px solid black">{{item.duration}}</td>
+					<td style="border: 1px solid black">{{item.endDate | date :'yyyy-MM-dd HH:mm:ss'}}</td>
+				</tr>
+			</tbody>
+		</table>
+		
+	</div>
+</div>
+	
+	
+</body>
+<script src="vendors/angular.js"></script>
+<script>
+var app = angular.module('myApp', []).controller('myController',function($scope,$filter)
+{
+	$scope.playList=[];
+	$scope.test = true;
+	$scope.show =true;
+	$scope.define={};
+	$scope.test1={};
+	$scope.showResult=[];
+	$scope.selectedDaysArr=[];
+ // $scope.json=JSON.stringify([{"name":"Ward Bell","address":"Dallas,Texas","orders":15}]);
+ $scope.days = [ { 'name': 'MONDAY',value:1}, { 'name': 'tuesday',value:2}, {'name': 'wednesday',value:3 },{ 'name': 'Thurday',value:4}, { 'name': 'friday',value:5}, 
+ {'name': 'saturaday' ,value:6},
+ {'name': 'sunday' ,value:0}];
+ $scope.selectedDays = function (day) {
+	$scope.selectedDaysArr.push(day);
+}
+
+$scope.test =function(){
+	$scope.test = true;
+	console.log($scope.define);
+}
+
+$scope.show = function(){
+
+	$scope.show=true;
+	console.log($scope.test1);
+	$scope.define.start = parseInt($scope.define.start);
+	$scope.define.end = parseInt($scope.define.end);
+	var getcurrStrtHrs = new Date().getHours();
+	var getcurrStrtmins = new Date().getMinutes();
+	var date1 = new Date($scope.test1.date);
+	date1.setHours(getcurrStrtHrs);
+	date1.setMinutes(0);
+	date1.setMilliseconds(0);
+
+	var startDate = date1;
+	var i=1;
+	var dayCount = 1;
+	var endDay,endDate;
+	var workinghrs = $scope.define.end - $scope.define.start;
+	var diff;
+	if(((getcurrStrtHrs+ workinghrs) > $scope.define.end && i) &&($scope.define.end>$scope.define.start)){
+		diff = getcurrStrtHrs+ workinghrs - $scope.define.end;
+	}
+	if(diff > 0){
+
+		while(i<=$scope.test1.duration){
+			var date2 = new Date($scope.test1.date);
+			date2.setDate(date2.getDate($scope.test1.date) + dayCount);
+			temp = date2.getDay();
+			debugger;
+			var dayCheck = $scope.selectedDaysArr.filter(function(day){
+				if(day === temp){
+					return true;
+				}
+			})
+			if(dayCheck.length){
+				var date2 = new Date($scope.test1.date);
+				date2.setDate(date2.getDate($scope.test1.date) + dayCount);
+				endDay = date2.getDay();
+				endDate = date2;
+				dayCount++
+				
+				if(i>= $scope.test1.duration){
+					temp = diff+$scope.define.start;
+					date2.setHours(temp);
+					date2.setMinutes(0);
+					date2.setMilliseconds(0)
+				}
+				i++;
+			}else{
+				dayCount = dayCount +1;
+				i=i;
+			}
+		}
+	}
+	else if(diff ===0){
+		var date1 = new Date(($scope.test1.date));
+		date1.setHours($scope.define.end);
+		date1.setMinutes(0);
+		date1.setMilliseconds(0);
+	}
+	
+	console.log(endDay);
+	console.log(endDate);
+
+	var temp = {
+		startDate : startDate,
+		duration :	$scope.test1.duration,
+		endDate : endDate
+	}
+	$scope.showResult.push(temp);
+}
+})
+</script>
+</html>
